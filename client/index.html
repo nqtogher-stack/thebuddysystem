@@ -17,11 +17,26 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script
-      type="module"
-      defer
-      src="%VITE_ANALYTICS_ENDPOINT%/umami"
-      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+
+    <!-- Analytics: inject at runtime using import.meta.env to avoid unresolved %VITE_*% placeholders at build time -->
+    <script type="module">
+      const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
+      const siteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID;
+
+      if (endpoint && siteId) {
+        const s = document.createElement('script');
+        // keep it a module if the analytics endpoint supports ESM
+        s.type = 'module';
+        s.defer = true;
+        // use the same path as before
+        s.src = `${endpoint}/umami`;
+        s.setAttribute('data-website-id', siteId);
+        document.head.appendChild(s);
+      } else {
+        // Optionally log (disabled in production) — remove or guard as needed
+        // console.debug('Umami not injected: missing VITE_ANALYTICS_ENDPOINT or VITE_ANALYTICS_WEBSITE_ID');
+      }
+    </script>
   </body>
 
 </html>
